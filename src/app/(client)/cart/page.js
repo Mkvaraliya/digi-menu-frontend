@@ -1,5 +1,5 @@
 "use client";
-
+export const dynamic = "force-dynamic";
 import { ArrowLeft, Minus, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/app/(client)/components/ui/button";
 import { Card } from "@/app/(client)/components/ui/card";
