@@ -7,7 +7,11 @@ import { useRouter, useParams } from "next/navigation";
 import { apiAuthGet, apiAuthPut, apiAuthUpload } from "@/lib/apiClient";
 import { toast } from "sonner";
 
-const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const apiBase =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://digi-menu-backend.onrender.com";
+
+// const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 export default function EditDishPage() {
   const router = useRouter();

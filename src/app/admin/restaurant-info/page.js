@@ -6,7 +6,11 @@ import { FiImage, FiSave, FiTrash2 } from "react-icons/fi";
 import { apiAuthGet, apiAuthPut, apiAuthUpload } from "@/lib/apiClient";
 import { toast } from "sonner";
 
-const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const apiBase =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://digi-menu-backend.onrender.com";
+
+// const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 export default function RestaurantDetailsPage() {
   const [loading, setLoading] = useState(true);

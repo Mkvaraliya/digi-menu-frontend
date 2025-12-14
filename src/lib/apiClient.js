@@ -1,7 +1,11 @@
 // src/lib/apiClient.js
 import { getToken } from "./authToken";
 
-const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const apiBase =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://digi-menu-backend.onrender.com";
+
+// const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 const isBrowser = typeof window !== "undefined";
 
 function withAuthHeaders(headers = {}) {
