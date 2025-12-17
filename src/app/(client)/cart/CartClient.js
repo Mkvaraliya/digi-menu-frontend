@@ -13,13 +13,8 @@ export default function CartClient() {
 
   const { cart, updateQuantity, removeFromCart, cartTotal } = useCart();
 
-  // slug from first cart item (if cart has items)
   const slugFromCart = cart[0]?.slug || "";
-
-  // slug from URL query (when cart is empty)
   const slugFromQuery = searchParams.get("slug") || "";
-
-  // final slug to use for "Browse Menu"
   const currentSlug = slugFromCart || slugFromQuery;
 
   const groupedCart = cart.reduce((acc, item) => {
@@ -28,7 +23,36 @@ export default function CartClient() {
     return acc;
   }, {});
 
-  // ───────────────── EMPTY CART ─────────────────
+  const CGST_RATE = 0.025;
+  const SGST_RATE = 0.025;
+
+  const cgstAmount = Math.round(cartTotal * CGST_RATE);
+  const sgstAmount = Math.round(cartTotal * SGST_RATE);
+
+  const grandTotal = cartTotal + cgstAmount + sgstAmount;
+
+  const goToDish = (dishId) => {
+    if (!currentSlug || !dishId) return;
+    router.push(`/${currentSlug}/dish/${dishId}`);
+  };
+
+  /* ───────── Reusable UI helpers ───────── */
+
+  const CategoryPill = ({ label }) => (
+    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-600 text-xs font-semibold text-white">
+      {label}
+    </span>
+  );
+
+  const TasteText = ({ taste }) =>
+    taste ? (
+      <span className="text-xs font-bold capitalize text-primary">
+        {taste}
+      </span>
+    ) : null;
+
+  /* ───────── Empty Cart ───────── */
+
   if (cart.length === 0) {
     return (
       <div className="min-h-screen bg-background">
@@ -49,7 +73,8 @@ export default function CartClient() {
     );
   }
 
-  // ───────────────── CART UI ─────────────────
+  /* ───────── Cart UI ───────── */
+
   return (
     <div className="min-h-screen bg-background pb-10">
       <div className="container mx-auto px-4 py-8">
@@ -75,69 +100,101 @@ export default function CartClient() {
 
                 <div className="space-y-4">
                   {items.map((item) => (
-                    <Card key={item.id} className="p-4">
-                      <div className="flex gap-4">
-                        <Image
-                          src={item.image}
-                          alt={item.name}
-                          width={96}
-                          height={96}
-                          className="object-cover rounded-lg"
-                        />
+                    <Card
+                      key={item.id}
+                      className="p-3 cursor-pointer hover:bg-muted/50 transition"
+                      onClick={() => goToDish(item.id)}
+                    >
 
-                        <div className="flex-1">
-                          <h3 className="font-bold text-lg mb-2">
-                            {item.name}
-                          </h3>
+                      <div className="flex items-stretch gap-3">
+                        {/* Image */}
+                        <div className="relative w-20 self-stretch flex-shrink-0">
+                          <Image
+                            src={item.image || "/assets/image-comming-soon.png"}
+                            alt={item.name}
+                            fill
+                            className="object-cover rounded-lg"
+                            onError={(e) => {
+                              e.currentTarget.src = "/assets/image-comming-soon.png";
+                            }}
+                          />
 
-                          <p className="text-primary font-bold mb-3">
-                            ₹{item.price}
-                          </p>
+                        </div>
 
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={() =>
-                                  updateQuantity(item.id, item.quantity - 1)
-                                }
-                                className="h-8 w-8"
-                              >
-                                <Minus className="h-4 w-4" />
-                              </Button>
-
-                              <span className="w-8 text-center font-semibold">
-                                {item.quantity}
-                              </span>
-
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={() =>
-                                  updateQuantity(item.id, item.quantity + 1)
-                                }
-                                className="h-8 w-8"
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
+                        {/* Content */}
+                        <div className="flex-1 flex flex-col">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <CategoryPill label={item.category} />
+                              <TasteText taste={item.taste} />
                             </div>
 
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => removeFromCart(item.id)}
-                              className="h-8 w-8 text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <h3 className="font-semibold text-base leading-snug line-clamp-2">
+                              {item.name}
+                            </h3>
+                          </div>
+
+                          <div className="mt-auto flex items-center justify-between pt-2">
+                            <span className="font-bold text-primary">
+                              ₹{item.price}
+                            </span>
+
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="flex items-center gap-1 bg-muted rounded-lg p-1"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateQuantity(item.id, item.quantity - 1);
+                                  }}
+                                  className="h-7 w-7"
+                                >
+
+                                  <Minus className="h-4 w-4" />
+                                </Button>
+
+                                <span className="w-6 text-center font-semibold">
+                                  {item.quantity}
+                                </span>
+
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateQuantity(item.id, item.quantity + 1);
+                                  }}
+                                  className="h-7 w-7"
+                                >
+
+                                  <Plus className="h-4 w-4" />
+                                </Button>
+                              </div>
+
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeFromCart(item.id);
+                                }}
+                                className="h-7 w-7 text-destructive"
+                              >
+
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="text-right">
-                          <p className="text-lg font-bold">
-                            ₹{item.price * item.quantity}
-                          </p>
+                        {/* Line total */}
+                        <div className="text-right font-bold self-end pb-1">
+                          ₹{item.price * item.quantity}
                         </div>
                       </div>
                     </Card>
@@ -152,30 +209,30 @@ export default function CartClient() {
             <Card className="p-6 sticky top-24">
               <h2 className="text-xl font-bold mb-6">Order Summary</h2>
 
-              <div className="space-y-4 mb-6">
+              <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-muted-foreground">
                   <span>Subtotal</span>
                   <span>₹{cartTotal}</span>
                 </div>
 
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Delivery Fee</span>
-                  <span>₹40</span>
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>CGST @ 2.5%</span>
+                  <span>₹{cgstAmount}</span>
+                </div>
+
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>SGST @ 2.5%</span>
+                  <span>₹{sgstAmount}</span>
                 </div>
 
                 <div className="h-px bg-border" />
 
                 <div className="flex justify-between text-xl font-bold">
                   <span>Total</span>
-                  <span className="text-primary">
-                    ₹{cartTotal + 40}
-                  </span>
+                  <span className="text-primary">₹{grandTotal}</span>
                 </div>
               </div>
 
-              <Button className="w-full" size="lg">
-                Proceed to Checkout
-              </Button>
             </Card>
           </div>
         </div>

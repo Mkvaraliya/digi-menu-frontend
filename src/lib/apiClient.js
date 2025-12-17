@@ -1,16 +1,26 @@
 // src/lib/apiClient.js
 import { getToken } from "./authToken";
 
-const apiBase =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://digi-menu-backend.onrender.com";
-
-// const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 const isBrowser = typeof window !== "undefined";
+
+/**
+ * Server → API_URL
+ * Client → NEXT_PUBLIC_API_URL
+ */
+const apiBase = isBrowser
+  ? process.env.NEXT_PUBLIC_API_URL
+  : process.env.API_URL;
+
+/**
+ * Final safety fallback (LOCAL DEV ONLY)
+ * This will NOT be used on Vercel / Render if envs are set
+ */
+const BASE_URL = apiBase || "http://localhost:4000";
 
 function withAuthHeaders(headers = {}) {
   const token = getToken();
   if (!token) return headers;
+
   return {
     ...headers,
     Authorization: `Bearer ${token}`,
@@ -23,9 +33,7 @@ async function handleResponse(res) {
     try {
       const data = await res.json();
       if (data?.message) message = data.message;
-    } catch {
-      // ignore JSON parse errors
-    }
+    } catch { }
     throw new Error(message);
   }
   return res.json();
@@ -34,20 +42,21 @@ async function handleResponse(res) {
 /* ---------- PUBLIC (no auth) ---------- */
 
 export async function apiGet(url, options = {}) {
-  const res = await fetch(`${apiBase}${url}`, {
+  const res = await fetch(`${BASE_URL}${url}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
       ...(options.headers || {}),
     },
-    cache: "no-store",
+    cache: "no-store", // IMPORTANT for Render cold starts
     ...options,
   });
+
   return handleResponse(res);
 }
 
 export async function apiPost(url, data = {}, options = {}) {
-  const res = await fetch(`${apiBase}${url}`, {
+  const res = await fetch(`${BASE_URL}${url}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -56,11 +65,12 @@ export async function apiPost(url, data = {}, options = {}) {
     body: JSON.stringify(data),
     ...options,
   });
+
   return handleResponse(res);
 }
 
 export async function apiPut(url, data = {}, options = {}) {
-  const res = await fetch(`${apiBase}${url}`, {
+  const res = await fetch(`${BASE_URL}${url}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -69,11 +79,12 @@ export async function apiPut(url, data = {}, options = {}) {
     body: JSON.stringify(data),
     ...options,
   });
+
   return handleResponse(res);
 }
 
 export async function apiDelete(url, options = {}) {
-  const res = await fetch(`${apiBase}${url}`, {
+  const res = await fetch(`${BASE_URL}${url}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
@@ -81,13 +92,14 @@ export async function apiDelete(url, options = {}) {
     },
     ...options,
   });
+
   return handleResponse(res);
 }
 
-/* ---------- AUTH (uses JWT from localStorage via authToken) ---------- */
+/* ---------- AUTH ---------- */
 
 export async function apiAuthGet(url, options = {}) {
-  const res = await fetch(`${apiBase}${url}`, {
+  const res = await fetch(`${BASE_URL}${url}`, {
     method: "GET",
     credentials: "include",
     headers: withAuthHeaders({
@@ -97,11 +109,12 @@ export async function apiAuthGet(url, options = {}) {
     cache: "no-store",
     ...options,
   });
+
   return handleResponse(res);
 }
 
 export async function apiAuthPost(url, data = {}, options = {}) {
-  const res = await fetch(`${apiBase}${url}`, {
+  const res = await fetch(`${BASE_URL}${url}`, {
     method: "POST",
     credentials: "include",
     headers: withAuthHeaders({
@@ -111,11 +124,12 @@ export async function apiAuthPost(url, data = {}, options = {}) {
     body: JSON.stringify(data),
     ...options,
   });
+
   return handleResponse(res);
 }
 
 export async function apiAuthPut(url, data = {}, options = {}) {
-  const res = await fetch(`${apiBase}${url}`, {
+  const res = await fetch(`${BASE_URL}${url}`, {
     method: "PUT",
     credentials: "include",
     headers: withAuthHeaders({
@@ -125,40 +139,34 @@ export async function apiAuthPut(url, data = {}, options = {}) {
     body: JSON.stringify(data),
     ...options,
   });
+
   return handleResponse(res);
 }
 
 export async function apiAuthPatch(url, data = {}, options = {}) {
-  const res = await fetch(`${apiBase}${url}`, {
+  const res = await fetch(`${BASE_URL}${url}`, {
     method: "PATCH",
     credentials: "include",
     headers: withAuthHeaders({
-      "Content-Type": "application/json",
+      "Content-Type": "application/json", 
       ...(options.headers || {}),
     }),
     body: JSON.stringify(data),
     ...options,
   });
+
   return handleResponse(res);
 }
 
-/**
- * Upload helper for FormData (file uploads).
- * IMPORTANT: do NOT set Content-Type header for multipart/form-data (browser will set with boundary).
- * We still attach Authorization header (if token present).
- *
- * Usage:
- *   const fd = new FormData(); fd.append('image', file);
- *   await apiAuthUpload('/api/owner/upload/restaurant-logo', fd);
- */
+/* ---------- FILE UPLOAD ---------- */
+
 export async function apiAuthUpload(url, formData, options = {}) {
-  // attach only Authorization (and any custom headers provided) — do NOT set Content-Type
   const authHeaders = withAuthHeaders(options.headers || {});
 
-  const res = await fetch(`${apiBase}${url}`, {
+  const res = await fetch(`${BASE_URL}${url}`, {
     method: options.method || "POST",
     credentials: "include",
-    headers: authHeaders, // only Authorization + any custom headers; browser sets multipart content-type
+    headers: authHeaders, // DO NOT set Content-Type
     body: formData,
     ...options,
   });
@@ -167,14 +175,14 @@ export async function apiAuthUpload(url, formData, options = {}) {
 }
 
 export async function apiAuthDelete(url, options = {}) {
-  const res = await fetch(`${apiBase}${url}`, {
+  const res = await fetch(`${BASE_URL}${url}`, {
     method: "DELETE",
     credentials: "include",
     headers: withAuthHeaders({
-      "Content-Type": "application/json",
       ...(options.headers || {}),
     }),
     ...options,
   });
+
   return handleResponse(res);
 }

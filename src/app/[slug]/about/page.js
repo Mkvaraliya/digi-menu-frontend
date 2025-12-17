@@ -79,16 +79,15 @@ export default function AboutPage({ params }) {
   // Loading state
   // ─────────────────────────────
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background pb-16">
-        <div className="container mx-auto px-4 py-16 text-center">
-          <p className="text-muted-foreground text-lg">
-            Loading restaurant info...
-          </p>
-        </div>
-      </div>
-    );
-  }
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <p className="text-muted-foreground text-lg">
+        Loading restaurant info...
+      </p>
+    </div>
+  );
+}
+
 
   // ─────────────────────────────
   // Error / not found
@@ -162,8 +161,14 @@ export default function AboutPage({ params }) {
 
         {/* Hero + header block */}
         <section className="mb-6">
+
+          <div className="flex flex-col items-center text-center">
+            <h1 className="text-3xl font-bold">{name || "Restaurant"}</h1>
+          </div>
+
+
           {/* Full-width hero image */}
-          <div className="w-full h-40 md:h-52 rounded-xl overflow-hidden mb-4 relative bg-muted">
+          <div className="w-full h-40 md:h-52 rounded-xl overflow-hidden mt-4 relative bg-muted">
             {heroSrc ? (
               <Image
                 src={heroSrc}
@@ -179,9 +184,7 @@ export default function AboutPage({ params }) {
             )}
           </div>
 
-          <div className="flex flex-col items-center text-center">
-            <h1 className="text-3xl font-bold">{name || "Restaurant"}</h1>
-          </div>
+          
         </section>
 
         <div className="grid md:grid-cols-2 gap-6">

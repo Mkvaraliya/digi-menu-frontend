@@ -102,14 +102,15 @@ export default function DishDetailPage({ params }) {
 
   // Loading state
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-16 text-center">
-          <p className="text-muted-foreground text-lg">Loading dish...</p>
-        </div>
-      </div>
-    );
-  }
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <p className="text-muted-foreground text-lg">
+        Loading dish...
+      </p>
+    </div>
+  );
+}
+
 
   // Restaurant inactive UI (same style as menu)
   if (!restaurantActive) {
@@ -145,7 +146,10 @@ export default function DishDetailPage({ params }) {
     );
   }
 
-  const imageSrc = dish.imageUrl || "/placeholder-dish.png";
+  // use imageUrl from API, fallback for safety
+ const imageSrc =
+  dish.imageUrl ||
+  "/assets/image-comming-soon.png";   // <-- your fallback image
 
   return (
     <div className="min-h-screen bg-background pb-10">

@@ -4,7 +4,7 @@ import { Input } from "@/app/(client)/components/ui/input";
 
 const SearchBar = ({ value, onChange }) => {
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto px-4 py-2">
       <div className="relative max-w-2xl mx-auto animate-fade-in">
         <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
         <Input

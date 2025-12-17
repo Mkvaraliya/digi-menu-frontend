@@ -1,4 +1,3 @@
-// src/app/(client)/components/Hero.js
 "use client";
 
 import Image from "next/image";
@@ -10,17 +9,16 @@ const Hero = ({ restaurant }) => {
   const altText = restaurant?.name || "Restaurant hero image";
 
   return (
-    <section className="relative bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10 py-4">
-      <div className="container mx-auto px-4">
-        <div className="w-full h-40 md:h-52 rounded-xl overflow-hidden relative shadow-md bg-muted">
-          <Image
-            src={heroSrc}
-            alt={altText}
-            fill
-            sizes="100vw"
-            className="object-cover"
-          />
-        </div>
+    <section className="relative w-full">
+      <div className="relative w-full h-40 md:h-52 overflow-hidden">
+        <Image
+          src={heroSrc}
+          alt={altText}
+          fill
+          sizes="100vw"
+          className="object-fit"
+          priority
+        />
       </div>
     </section>
   );

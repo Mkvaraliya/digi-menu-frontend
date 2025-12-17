@@ -10,7 +10,7 @@ const DishGrid = ({ dishes, slug }) => {
   const [layout, setLayout] = useState("horizontal");
 
   return (
-    <section className="container mx-auto px-4 py-6">
+    <section className="container mx-auto px-4 py-2">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">Our Dishes</h2>
         <div className="flex gap-2">
