@@ -40,10 +40,41 @@ const DishCard = ({ dish, layout = "horizontal", slug }) => {
 
 
   const CategoryPill = () => (
-    <span className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-600 text-xs font-semibold text-white">
+    <span className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-900 text-xs font-semibold text-white">
       {dish.category || "Dish"}
     </span>
   );
+
+  const GravyPill = () =>
+  dish.gravy ? (
+    <span
+      className={`
+        inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+        ${
+          dish.gravy.toLowerCase() === "red"
+            ? "bg-red-600 text-white"
+            : dish.gravy.toLowerCase() === "green"
+            ? "bg-green-600 text-white"
+            : dish.gravy.toLowerCase() === "brown"
+            ? "bg-amber-700 text-white"
+            : dish.gravy.toLowerCase() === "white"
+            ? "bg-gray-200 text-gray-900"
+            : "bg-slate-700 text-white"
+        }
+      `}
+    >
+      {dish.gravy} Gravy
+    </span>
+  ) : null;
+
+
+
+  const GravyText = () =>
+    dish.gravy ? (
+      <span className="text-sm font-bold capitalize text-secondary">
+        Gravy : {dish.gravy}
+      </span>
+    ) : null;
 
   const TasteText = () =>
     dish.taste ? (
@@ -51,6 +82,7 @@ const DishCard = ({ dish, layout = "horizontal", slug }) => {
         {dish.taste}
       </span>
     ) : null;
+
 
   // HORIZONTAL LAYOUT (like your screenshot)
   if (layout === "horizontal") {
@@ -67,6 +99,7 @@ const DishCard = ({ dish, layout = "horizontal", slug }) => {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <CategoryPill />
+                <GravyPill />
                 <TasteText />
               </div>
               <h3 className="font-bold text-lg leading-snug line-clamp-2">

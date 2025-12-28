@@ -127,6 +127,7 @@ export default function ViewDishPage() {
 
   // Normal success UI
   const tasteText = dish.tasteId?.name || "-";
+  const gravyText = dish.gravyId?.name || "-";
   const categoryText = dish.categoryId?.name || "-";
   const subcategoryText = dish.subcategoryId?.name || "-";
   const statusText = dish.status || "-";
@@ -193,6 +194,13 @@ export default function ViewDishPage() {
                 {tasteText}
               </div>
             </div>
+
+<div>
+  <div className="text-sm text-[#d0d0d0] mb-2">Gravy</div>
+  <div className="rounded-lg bg-[#181818] border border-[#2A2A2A] px-3 py-2 text-[#cfcfcf]">
+    {gravyText}
+  </div>
+</div>
 
             <div>
               <div className="text-sm text-[#d0d0d0] mb-2">Category</div>

@@ -17,10 +17,9 @@ const CategorySection = ({
 
       {/* CATEGORY ROW */}
       <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
-        {/* All */}
         <button
           onClick={() => onSelectCategory("all", "all")}
-          className={`min-w-[120px] h-12 px-5 rounded-full text-sm font-medium transition-all whitespace-nowrap
+          className={`min-w-[120px] h-12 px-5 rounded-full text-sm font-medium transition-all whitespace-nowrap shrink-0
             ${
               selectedCategoryName === "all"
                 ? "bg-primary text-primary-foreground shadow-md"
@@ -30,12 +29,11 @@ const CategorySection = ({
           All
         </button>
 
-        {/* Dynamic Categories */}
         {categories.map((category) => (
           <button
             key={category.id}
             onClick={() => onSelectCategory(category.id, category.name)}
-            className={`min-w-[120px] h-12 px-5 rounded-full text-sm font-medium transition-all whitespace-nowrap
+            className={`min-w-[120px] h-12 px-5 rounded-full text-sm font-medium transition-all whitespace-nowrap shrink-0
               ${
                 selectedCategoryName === category.name
                   ? "bg-primary text-primary-foreground shadow-md"
@@ -55,9 +53,11 @@ const CategorySection = ({
           </h3>
 
           <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
+            {/* ALL SUBCATEGORY */}
             <Card
               onClick={() => onSelectSubcategory("")}
-              className={`px-4 py-2 min-w-[120px] text-center cursor-pointer rounded-md border transition-all
+              className={`min-w-[120px] h-10 px-4 flex items-center justify-center whitespace-nowrap shrink-0
+                cursor-pointer rounded-md border transition-all
                 ${
                   !selectedSubcategoryId
                     ? "bg-primary text-primary-foreground border-primary"
@@ -69,18 +69,22 @@ const CategorySection = ({
               </span>
             </Card>
 
+            {/* DYNAMIC SUBCATEGORIES */}
             {activeCategory.subcategories.map((sub) => (
               <Card
                 key={sub.id}
                 onClick={() => onSelectSubcategory(sub.id)}
-                className={`px-4 py-2 min-w-[120px] text-center cursor-pointer rounded-md border transition-all
+                className={`min-w-[120px] h-10 px-4 flex items-center justify-center whitespace-nowrap shrink-0
+                  cursor-pointer rounded-md border transition-all
                   ${
                     selectedSubcategoryId === sub.id
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-card hover:bg-muted"
                   }`}
               >
-                <span className="text-sm font-medium">{sub.name}</span>
+                <span className="text-sm font-medium">
+                  {sub.name}
+                </span>
               </Card>
             ))}
           </div>

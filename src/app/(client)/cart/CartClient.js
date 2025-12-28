@@ -6,6 +6,8 @@ import { Card } from "@/app/(client)/components/ui/card";
 import { useCart } from "@/contexts/CartContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { apiGet } from "@/lib/apiClient";
 
 export default function CartClient() {
   const router = useRouter();
@@ -16,6 +18,30 @@ export default function CartClient() {
   const slugFromCart = cart[0]?.slug || "";
   const slugFromQuery = searchParams.get("slug") || "";
   const currentSlug = slugFromCart || slugFromQuery;
+
+  /* ✅ NEW: hide cart total flag */
+  const [hideCartTotal, setHideCartTotal] = useState(null);
+
+  /* ✅ Fetch restaurant info from about/menu API */
+  useEffect(() => {
+    if (!currentSlug) return;
+
+    async function fetchRestaurantInfo() {
+      try {
+        const res = await apiGet(`/api/menu/${currentSlug}`);
+        const hide =
+          typeof res?.data?.restaurant?.hideCartTotal === "boolean"
+            ? res.data.restaurant.hideCartTotal
+            : false;
+
+        setHideCartTotal(hide);
+      } catch (err) {
+        console.error("Failed to fetch restaurant info", err);
+      }
+    }
+
+    fetchRestaurantInfo();
+  }, [currentSlug]);
 
   const groupedCart = cart.reduce((acc, item) => {
     if (!acc[item.category]) acc[item.category] = [];
@@ -35,21 +61,6 @@ export default function CartClient() {
     if (!currentSlug || !dishId) return;
     router.push(`/${currentSlug}/dish/${dishId}`);
   };
-
-  /* ───────── Reusable UI helpers ───────── */
-
-  const CategoryPill = ({ label }) => (
-    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-600 text-xs font-semibold text-white">
-      {label}
-    </span>
-  );
-
-  const TasteText = ({ taste }) =>
-    taste ? (
-      <span className="text-xs font-bold capitalize text-primary">
-        {taste}
-      </span>
-    ) : null;
 
   /* ───────── Empty Cart ───────── */
 
@@ -89,9 +100,15 @@ export default function CartClient() {
 
         <h1 className="text-3xl font-bold mb-8">Your Cart</h1>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className={`grid gap-8 ${hideCartTotal === true
+            ? "lg:grid-cols-1"
+            : hideCartTotal === false
+              ? "lg:grid-cols-3"
+              : "lg:grid-cols-1" // loading state
+          }`}>
+
           {/* LEFT: ITEMS */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className={hideCartTotal ? "" : "lg:col-span-2 space-y-6"}>
             {Object.entries(groupedCart).map(([category, items]) => (
               <div key={category}>
                 <h2 className="text-xl font-bold mb-4 text-primary">
@@ -105,95 +122,27 @@ export default function CartClient() {
                       className="p-3 cursor-pointer hover:bg-muted/50 transition"
                       onClick={() => goToDish(item.id)}
                     >
-
                       <div className="flex items-stretch gap-3">
-                        {/* Image */}
                         <div className="relative w-20 self-stretch flex-shrink-0">
                           <Image
                             src={item.image || "/assets/image-comming-soon.png"}
                             alt={item.name}
                             fill
                             className="object-cover rounded-lg"
-                            onError={(e) => {
-                              e.currentTarget.src = "/assets/image-comming-soon.png";
-                            }}
                           />
-
                         </div>
 
-                        {/* Content */}
                         <div className="flex-1 flex flex-col">
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <CategoryPill label={item.category} />
-                              <TasteText taste={item.taste} />
-                            </div>
-
-                            <h3 className="font-semibold text-base leading-snug line-clamp-2">
-                              {item.name}
-                            </h3>
-                          </div>
+                          <h3 className="font-semibold">{item.name}</h3>
 
                           <div className="mt-auto flex items-center justify-between pt-2">
                             <span className="font-bold text-primary">
                               ₹{item.price}
                             </span>
-
-                            <div className="flex items-center gap-2">
-                              <div
-                                className="flex items-center gap-1 bg-muted rounded-lg p-1"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    updateQuantity(item.id, item.quantity - 1);
-                                  }}
-                                  className="h-7 w-7"
-                                >
-
-                                  <Minus className="h-4 w-4" />
-                                </Button>
-
-                                <span className="w-6 text-center font-semibold">
-                                  {item.quantity}
-                                </span>
-
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    updateQuantity(item.id, item.quantity + 1);
-                                  }}
-                                  className="h-7 w-7"
-                                >
-
-                                  <Plus className="h-4 w-4" />
-                                </Button>
-                              </div>
-
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  removeFromCart(item.id);
-                                }}
-                                className="h-7 w-7 text-destructive"
-                              >
-
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
                           </div>
                         </div>
 
-                        {/* Line total */}
-                        <div className="text-right font-bold self-end pb-1">
+                        <div className="font-bold self-end pb-1">
                           ₹{item.price * item.quantity}
                         </div>
                       </div>
@@ -204,37 +153,38 @@ export default function CartClient() {
             ))}
           </div>
 
-          {/* RIGHT: SUMMARY */}
-          <div className="lg:col-span-1">
-            <Card className="p-6 sticky top-24">
-              <h2 className="text-xl font-bold mb-6">Order Summary</h2>
+          {/* ✅ RIGHT: SUMMARY (CONDITIONAL) */}
+          {hideCartTotal === false && (
+            <div className="lg:col-span-1">
+              <Card className="p-6 sticky top-24">
+                <h2 className="text-xl font-bold mb-6">Order Summary</h2>
 
-              <div className="space-y-3 mb-6">
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Subtotal</span>
-                  <span>₹{cartTotal}</span>
+                <div className="space-y-3 mb-6">
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Subtotal</span>
+                    <span>₹{cartTotal}</span>
+                  </div>
+
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>CGST @ 2.5%</span>
+                    <span>₹{cgstAmount}</span>
+                  </div>
+
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>SGST @ 2.5%</span>
+                    <span>₹{sgstAmount}</span>
+                  </div>
+
+                  <div className="h-px bg-border" />
+
+                  <div className="flex justify-between text-xl font-bold">
+                    <span>Total</span>
+                    <span className="text-primary">₹{grandTotal}</span>
+                  </div>
                 </div>
-
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>CGST @ 2.5%</span>
-                  <span>₹{cgstAmount}</span>
-                </div>
-
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>SGST @ 2.5%</span>
-                  <span>₹{sgstAmount}</span>
-                </div>
-
-                <div className="h-px bg-border" />
-
-                <div className="flex justify-between text-xl font-bold">
-                  <span>Total</span>
-                  <span className="text-primary">₹{grandTotal}</span>
-                </div>
-              </div>
-
-            </Card>
-          </div>
+              </Card>
+            </div>
+          )}
         </div>
       </div>
     </div>

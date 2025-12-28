@@ -25,7 +25,6 @@ export default function AboutPage({ params }) {
 
         // public menu endpoint – returns { success, data: { restaurant, categories, dishes } }
         const res = await apiGet(`/api/menu/${slug}`);
-
         const r = res?.data?.restaurant || null;
         setRestaurant(r);
         console.log("AboutPage restaurant =", r);

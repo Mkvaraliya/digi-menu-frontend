@@ -29,6 +29,8 @@ export default function RestaurantDetailsPage() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [googleMapUrl, setGoogleMapUrl] = useState("");
+  const [hideCartTotal, setHideCartTotal] = useState(false);
+
 
   // new files chosen by user
   const [logoFile, setLogoFile] = useState(null);
@@ -116,6 +118,9 @@ export default function RestaurantDetailsPage() {
         setLunchClose(r.lunch?.close || "");
         setDinnerOpen(r.dinner?.open || "");
         setDinnerClose(r.dinner?.close || "");
+        setHideCartTotal(
+          typeof r.hideCartTotal === "boolean" ? r.hideCartTotal : false
+        );
 
         setLoading(false);
       } catch (err) {
@@ -185,6 +190,8 @@ export default function RestaurantDetailsPage() {
         googleMapUrl,
         lunch: { open: lunchOpen, close: lunchClose },
         dinner: { open: dinnerOpen, close: dinnerClose },
+        hideCartTotal,
+
       };
 
       await apiAuthPut("/api/owner/restaurant-info", payload);
@@ -333,6 +340,31 @@ export default function RestaurantDetailsPage() {
                 </div>
               </div>
             </div>
+
+            {/* CART TOTAL VISIBILITY */}
+            <div className="rounded-lg border border-[#2A2A2A] bg-[#0f0f0f] p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Hide Total in Cart</p>
+                  <p className="text-xs text-[#888] mt-1">
+                    Enable to hide total amount on the cart page
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setHideCartTotal((prev) => !prev)}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${hideCartTotal ? "bg-[#ffb300]" : "bg-[#444]"
+                    }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-black transition-transform ${hideCartTotal ? "translate-x-6" : "translate-x-0"
+                      }`}
+                  />
+                </button>
+              </div>
+            </div>
+
           </div>
 
           {/* RIGHT SIDE — IMAGES */}

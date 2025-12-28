@@ -59,7 +59,7 @@ export default function MenuUI({ restaurant, categories, dishes, slug }) {
 
   return (
     <div className="min-h-screen bg-background pb-10">
-      <Hero restaurant={restaurant} />
+      {/* <Hero restaurant={restaurant} /> */}
 
       <SearchBar value={searchQuery} onChange={setSearchQuery} />
 

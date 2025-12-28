@@ -21,12 +21,15 @@ export default function AddDishPage() {
   const [categories, setCategories] = useState([]); // [{_id, name}]
   const [subcategories, setSubcategories] = useState([]); // for selected category
   const [tastes, setTastes] = useState([]); // [{_id, name}]
+  const [gravies, setGravies] = useState([]); // [{_id, name}]
+
 
   // form state
   const [dishName, setDishName] = useState("");
   const [imgFile, setImgFile] = useState(null);
   const [price, setPrice] = useState("");
   const [selectedTaste, setSelectedTaste] = useState(""); // tasteId
+  const [selectedGravy, setSelectedGravy] = useState(""); // gravyId
   const [selectedCategory, setSelectedCategory] = useState(""); // categoryId
   const [selectedSubcategory, setSelectedSubcategory] = useState(""); // subcategoryId
   const [status, setStatus] = useState("available"); // "available" | "out_of_stock"
@@ -60,6 +63,7 @@ export default function AddDishPage() {
     setImgFile(null);
     setPrice("");
     setSelectedTaste("");
+    setSelectedGravy("");
     setSelectedCategory("");
     setSelectedSubcategory("");
     setStatus("available");
@@ -74,12 +78,16 @@ export default function AddDishPage() {
   useEffect(() => {
     const loadTaxonomies = async () => {
       try {
-        const [tRes, cRes] = await Promise.all([
+        const [tRes, gRes, cRes] = await Promise.all([
           apiAuthGet("/api/owner/tastes"),
+          apiAuthGet("/api/owner/gravies"),
           apiAuthGet("/api/owner/categories"),
         ]);
+
         setTastes(tRes.data || []);
         setCategories(cRes.data || []);
+        setGravies(gRes.data || []);
+
       } catch (err) {
         console.error("Failed to load taxonomies:", err);
         toast.error("Failed to load tastes/categories");
@@ -155,6 +163,7 @@ export default function AddDishPage() {
         name: dishName.trim(),
         price: Number(price),
         tasteId: selectedTaste || null,
+        gravyId: selectedGravy || null,
         categoryId: selectedCategory,
         subcategoryId: selectedSubcategory || null,
         ingredients,
@@ -243,6 +252,24 @@ export default function AddDishPage() {
                   ))}
                 </select>
               </div>
+
+              {/* Gravy */}
+              <div>
+                <div className="text-sm text-[#d0d0d0] mb-2">Gravy</div>
+                <select
+                  value={selectedGravy}
+                  onChange={(e) => setSelectedGravy(e.target.value)}
+                  className="w-full rounded-lg bg-[#181818] border border-[#2A2A2A] px-3 py-2"
+                >
+                  <option value="">-- Select Gravy --</option>
+                  {gravies.map((g) => (
+                    <option key={g._id} value={g._id}>
+                      {g.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
 
               {/* Category */}
               <div>

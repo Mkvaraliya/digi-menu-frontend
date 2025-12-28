@@ -24,6 +24,7 @@ export default function EditDishPage() {
   const [categories, setCategories] = useState([]); // [{_id, name}]
   const [subcategories, setSubcategories] = useState([]); // for selected category
   const [tastes, setTastes] = useState([]); // [{_id, name}]
+  const [gravies, setGravies] = useState([]); // [{_id, name}]
 
   // dish + form state
   const [dish, setDish] = useState(null);
@@ -34,6 +35,7 @@ export default function EditDishPage() {
   const [dishName, setDishName] = useState("");
   const [price, setPrice] = useState("");
   const [selectedTaste, setSelectedTaste] = useState(""); // tasteId
+  const [selectedGravy, setSelectedGravy] = useState(""); // gravyId
   const [selectedCategory, setSelectedCategory] = useState(""); // categoryId
   const [selectedSubcategory, setSelectedSubcategory] = useState(""); // subcategoryId
   const [status, setStatus] = useState("available"); // available | out_of_stock
@@ -92,6 +94,7 @@ export default function EditDishPage() {
     if (imgInputRef.current) imgInputRef.current.value = "";
 
     setSelectedTaste(data.tasteId?._id || "");
+    setSelectedGravy(data.gravyId?._id || "");
     setSelectedCategory(data.categoryId?._id || "");
     setInitialSubcategoryId(data.subcategoryId?._id || "");
     setSelectedSubcategory(""); // will be set after subcategories are fetched
@@ -103,12 +106,15 @@ export default function EditDishPage() {
   useEffect(() => {
     const loadTaxonomies = async () => {
       try {
-        const [tRes, cRes] = await Promise.all([
+        const [tRes, gRes, cRes] = await Promise.all([
           apiAuthGet("/api/owner/tastes"),
+          apiAuthGet("/api/owner/gravies"),
           apiAuthGet("/api/owner/categories"),
         ]);
         setTastes(tRes.data || []);
+        setGravies(gRes.data || []);
         setCategories(cRes.data || []);
+
       } catch (err) {
         console.error("Failed to load taxonomies:", err);
         toast.error("Failed to load tastes/categories");
@@ -225,6 +231,7 @@ export default function EditDishPage() {
         name: dishName.trim(),
         price: Number(price),
         tasteId: selectedTaste || null,
+        gravyId: selectedGravy || null,
         categoryId: selectedCategory,
         subcategoryId: selectedSubcategory || null,
         ingredients,
@@ -341,6 +348,9 @@ export default function EditDishPage() {
 
             {/* taste / category / subcategory / status */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+               
+
               {/* Taste */}
               <div>
                 <div className="text-sm text-[#d0d0d0] mb-2">Taste</div>
@@ -353,6 +363,23 @@ export default function EditDishPage() {
                   {tastes.map((t) => (
                     <option key={t._id} value={t._id}>
                       {t.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+             {/* Gravy */}
+              <div>
+                <div className="text-sm text-[#d0d0d0] mb-2">Gravy</div>
+                <select
+                  value={selectedGravy}
+                  onChange={(e) => setSelectedGravy(e.target.value)}
+                  className="w-full rounded-lg bg-[#181818] border border-[#2A2A2A] px-3 py-2"
+                >
+                  <option value="">-- Select Gravy --</option>
+                  {gravies.map((g) => (
+                    <option key={g._id} value={g._id}>
+                      {g.name}
                     </option>
                   ))}
                 </select>

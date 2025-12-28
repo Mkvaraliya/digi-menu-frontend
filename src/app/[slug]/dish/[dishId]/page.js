@@ -102,14 +102,14 @@ export default function DishDetailPage({ params }) {
 
   // Loading state
   if (loading) {
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <p className="text-muted-foreground text-lg">
-        Loading dish...
-      </p>
-    </div>
-  );
-}
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground text-lg">
+          Loading dish...
+        </p>
+      </div>
+    );
+  }
 
 
   // Restaurant inactive UI (same style as menu)
@@ -147,9 +147,9 @@ export default function DishDetailPage({ params }) {
   }
 
   // use imageUrl from API, fallback for safety
- const imageSrc =
-  dish.imageUrl ||
-  "/assets/image-comming-soon.png";   // <-- your fallback image
+  const imageSrc =
+    dish.imageUrl ||
+    "/assets/image-comming-soon.png";   // <-- your fallback image
 
   return (
     <div className="min-h-screen bg-background pb-10">
@@ -185,6 +185,27 @@ export default function DishDetailPage({ params }) {
                 </Badge>
               )}
 
+              {/* Gravy pill */}
+              {(dish.gravy || dish.gravyId?.name) && (
+                <span
+                  className={`
+                    inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+                    ${(dish.gravy || dish.gravyId?.name)?.toLowerCase() === "red"
+                      ? "bg-red-600 text-white"
+                      : (dish.gravy || dish.gravyId?.name)?.toLowerCase() === "green"
+                        ? "bg-green-600 text-white"
+                        : (dish.gravy || dish.gravyId?.name)?.toLowerCase() === "brown"
+                          ? "bg-amber-700 text-white"
+                          : (dish.gravy || dish.gravyId?.name)?.toLowerCase() === "white"
+                            ? "bg-gray-200 text-gray-900"
+                            : "bg-orange-500 text-white"
+                    }
+                  `}
+                >
+                  {(dish.gravy || dish.gravyId?.name)} Gravy
+                </span>
+              )}
+
               {/* Taste text */}
               {(dish.taste || dish.tasteId?.name) && (
                 <span className="text-sm font-semibold capitalize text-primary">
@@ -192,6 +213,7 @@ export default function DishDetailPage({ params }) {
                 </span>
               )}
             </div>
+
 
             <h1 className="text-3xl md:text-4xl font-bold mb-4">
               {dish.name}
