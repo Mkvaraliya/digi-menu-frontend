@@ -34,10 +34,6 @@ export default function DishDetailPage({ params }) {
         // call backend
         const res = await apiGet(`/api/menu/${encodeURIComponent(slug)}/dish/${encodeURIComponent(dishId)}`);
 
-        // backend shape may vary. Try common shapes:
-        // 1) { success: true, data: { dish, restaurant, ... } }
-        // 2) { success: true, dish: {...}, restaurant: {...} }
-        // 3) { data: { dish: ... } }
         const payload = res?.data ?? res;
 
         // if backend included restaurant data, use it

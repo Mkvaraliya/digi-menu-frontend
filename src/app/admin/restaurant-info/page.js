@@ -20,7 +20,8 @@ export default function RestaurantDetailsPage() {
   // form fields
   const [name, setName] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
-  const [heroUrl, setHeroUrl] = useState("");
+
+  const [heroImages, setHeroImages] = useState([]); // saved URLs
   const [address, setAddress] = useState("");
   const [lunchOpen, setLunchOpen] = useState("");
   const [lunchClose, setLunchClose] = useState("");
@@ -29,20 +30,19 @@ export default function RestaurantDetailsPage() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [googleMapUrl, setGoogleMapUrl] = useState("");
+  const [rules, setRules] = useState([]);
   const [hideCartTotal, setHideCartTotal] = useState(false);
-
 
   // new files chosen by user
   const [logoFile, setLogoFile] = useState(null);
-  const [heroFile, setHeroFile] = useState(null);
+  const [heroFiles, setHeroFiles] = useState([]); // new files
 
   // keep preview URLs in state so we can revoke them properly
   const [logoPreviewUrl, setLogoPreviewUrl] = useState("");
-  const [heroPreviewUrl, setHeroPreviewUrl] = useState("");
+  const [heroPreviews, setHeroPreviews] = useState([]); // local previews
 
   // refs to remember last created object urls to revoke
   const lastLogoObjectUrl = useRef(null);
-  const lastHeroObjectUrl = useRef(null);
 
   // -------------------------------
   // Helpers: manage previews safely
@@ -72,31 +72,6 @@ export default function RestaurantDetailsPage() {
     };
   }, [logoFile]);
 
-  useEffect(() => {
-    if (heroFile) {
-      if (lastHeroObjectUrl.current) {
-        URL.revokeObjectURL(lastHeroObjectUrl.current);
-        lastHeroObjectUrl.current = null;
-      }
-      const obj = URL.createObjectURL(heroFile);
-      lastHeroObjectUrl.current = obj;
-      setHeroPreviewUrl(obj);
-    } else {
-      if (lastHeroObjectUrl.current) {
-        URL.revokeObjectURL(lastHeroObjectUrl.current);
-        lastHeroObjectUrl.current = null;
-      }
-      setHeroPreviewUrl("");
-    }
-
-    return () => {
-      if (lastHeroObjectUrl.current) {
-        URL.revokeObjectURL(lastHeroObjectUrl.current);
-        lastHeroObjectUrl.current = null;
-      }
-    };
-  }, [heroFile]);
-
   // -------------------------------
   // Load saved restaurant info
   // -------------------------------
@@ -108,7 +83,7 @@ export default function RestaurantDetailsPage() {
 
         setName(r.name || "");
         setLogoUrl(r.logoUrl || r.logo || "");
-        setHeroUrl(r.heroImageUrl || r.heroUrl || "");
+        setHeroImages(Array.isArray(r.heroImages) ? r.heroImages : []);
         setAddress(r.address || "");
         setPhone(r.phone || "");
         setEmail(r.email || "");
@@ -121,6 +96,7 @@ export default function RestaurantDetailsPage() {
         setHideCartTotal(
           typeof r.hideCartTotal === "boolean" ? r.hideCartTotal : false
         );
+        setRules(Array.isArray(r.rules) ? r.rules : []);
 
         setLoading(false);
       } catch (err) {
@@ -159,7 +135,7 @@ export default function RestaurantDetailsPage() {
       setSaving(true);
 
       let finalLogoUrl = logoUrl;
-      let finalHeroUrl = heroUrl;
+      let finalHeroImages = [...heroImages];
 
       // upload logo if changed
       if (logoFile) {
@@ -167,40 +143,43 @@ export default function RestaurantDetailsPage() {
           logoFile,
           "/api/owner/upload/restaurant-logo"
         );
-        finalLogoUrl = upload.data?.imageUrl || upload.data?.url || finalLogoUrl;
+        finalLogoUrl =
+          upload.data?.imageUrl || upload.data?.url || finalLogoUrl;
       }
 
-      // upload hero image if changed
-      if (heroFile) {
+      for (const file of heroFiles) {
         const upload = await uploadImageUsingClient(
-          heroFile,
+          file,
           "/api/owner/upload/restaurant-hero"
         );
-        finalHeroUrl = upload.data?.imageUrl || upload.data?.url || finalHeroUrl;
+
+        const url = upload.data?.imageUrl || upload.data?.url;
+        if (url) finalHeroImages.push(url);
       }
 
       // now save restaurant info
       const payload = {
         name,
         logoUrl: finalLogoUrl,
-        heroImageUrl: finalHeroUrl,
+        heroImages: finalHeroImages,
         phone,
         email,
         address,
         googleMapUrl,
         lunch: { open: lunchOpen, close: lunchClose },
         dinner: { open: dinnerOpen, close: dinnerClose },
+        rules,
         hideCartTotal,
-
       };
 
       await apiAuthPut("/api/owner/restaurant-info", payload);
 
       // update local state to show new remote urls after save
       setLogoUrl(finalLogoUrl);
-      setHeroUrl(finalHeroUrl);
       setLogoFile(null);
-      setHeroFile(null);
+      setHeroImages(finalHeroImages);
+      setHeroFiles([]);
+      setHeroPreviews([]);
 
       toast.success("Restaurant details saved");
     } catch (err) {
@@ -225,9 +204,12 @@ export default function RestaurantDetailsPage() {
     setDinnerOpen("");
     setDinnerClose("");
     setLogoFile(null);
-    setHeroFile(null);
     setLogoUrl("");
-    setHeroUrl("");
+    setHeroImages([]);
+    setHeroFiles([]);
+    setHeroPreviews([]);
+
+    setRules([]);
   }
 
   if (loading) {
@@ -302,6 +284,53 @@ export default function RestaurantDetailsPage() {
               />
             </label>
 
+            {/* RULES / TERMS */}
+            <div className="rounded-lg border border-[#2A2A2A] bg-[#0f0f0f] p-4">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-medium">
+                  Rules / Terms & Conditions
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setRules((prev) => [...prev, ""])}
+                  className="text-xs px-3 py-1 rounded bg-[#ffb300] text-black"
+                >
+                  + Add Rule
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                {rules.map((rule, index) => (
+                  <div key={index} className="flex gap-2 items-start">
+                    <span className="text-sm text-[#888] mt-2">
+                      {index + 1}.
+                    </span>
+
+                    <input
+                      value={rule}
+                      onChange={(e) => {
+                        const updated = [...rules];
+                        updated[index] = e.target.value;
+                        setRules(updated);
+                      }}
+                      placeholder="Enter rule"
+                      className="flex-1 rounded-md bg-[#181818] border border-[#2A2A2A] px-3 py-2 text-sm"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setRules((prev) => prev.filter((_, i) => i !== index))
+                      }
+                      className="text-red-400 text-sm mt-2"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* TIMINGS */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -354,17 +383,18 @@ export default function RestaurantDetailsPage() {
                 <button
                   type="button"
                   onClick={() => setHideCartTotal((prev) => !prev)}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${hideCartTotal ? "bg-[#ffb300]" : "bg-[#444]"
-                    }`}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    hideCartTotal ? "bg-[#ffb300]" : "bg-[#444]"
+                  }`}
                 >
                   <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-black transition-transform ${hideCartTotal ? "translate-x-6" : "translate-x-0"
-                      }`}
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-black transition-transform ${
+                      hideCartTotal ? "translate-x-6" : "translate-x-0"
+                    }`}
                   />
                 </button>
               </div>
             </div>
-
           </div>
 
           {/* RIGHT SIDE — IMAGES */}
@@ -419,38 +449,64 @@ export default function RestaurantDetailsPage() {
             <div className="rounded-lg border border-[#2A2A2A] bg-[#0f0f0f] p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm">Hero Image</span>
-                <span className="text-xs text-[#888]">1200×400 recommended</span>
+                <span className="text-xs text-[#888]">
+                  1200×400 recommended
+                </span>
               </div>
 
-              <div className="h-32 rounded border border-[#2A2A2A] bg-[#1a1a1a] flex items-center justify-center overflow-hidden">
-                {heroPreviewUrl ? (
-                  <img
-                    src={heroPreviewUrl}
-                    alt="Hero preview"
-                    className="object-cover w-full h-full"
-                    onError={handleImgError}
-                  />
-                ) : heroUrl ? (
-                  <img
-                    src={heroUrl}
-                    alt="Hero"
-                    className="object-cover w-full h-full"
-                    onError={handleImgError}
-                  />
-                ) : (
-                  <div className="text-center text-[#777] flex flex-col items-center gap-1">
-                    <FiImage size={22} />
-                    <span className="text-xs">No image</span>
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                {[...heroImages, ...heroPreviews].map((src, index) => (
+                  <div
+                    key={index}
+                    className="relative h-24 rounded overflow-hidden"
+                  >
+                    <img
+                      src={src}
+                      className="object-cover w-full h-full"
+                      onError={handleImgError}
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (index < heroImages.length) {
+                          setHeroImages((prev) =>
+                            prev.filter((_, i) => i !== index)
+                          );
+                        } else {
+                          const localIndex = index - heroImages.length;
+                          setHeroFiles((prev) =>
+                            prev.filter((_, i) => i !== localIndex)
+                          );
+                          setHeroPreviews((prev) =>
+                            prev.filter((_, i) => i !== localIndex)
+                          );
+                        }
+                      }}
+                      className="absolute top-1 right-1 bg-black/70 text-white text-xs px-2 rounded"
+                    >
+                      ✕
+                    </button>
                   </div>
-                )}
+                ))}
               </div>
 
               <input
                 type="file"
                 accept="image/*"
+                multiple
                 onChange={(e) => {
-                  const f = e.target.files && e.target.files[0];
-                  setHeroFile(f || null);
+                  const files = Array.from(e.target.files || []);
+
+                  setHeroFiles((prev) => [...prev, ...files]);
+
+                  setHeroPreviews((prev) => [
+                    ...prev,
+                    ...files.map((f) => URL.createObjectURL(f)),
+                  ]);
+
+                  // reset input so same file can be selected again if needed
+                  e.target.value = "";
                 }}
                 className="mt-3 file:bg-[#ffb300] file:text-black file:px-4 file:py-2 file:rounded text-sm"
               />

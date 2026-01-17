@@ -1,4 +1,3 @@
-// src/app/[slug]/about/page.js
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,6 +7,7 @@ import Image from "next/image";
 import { Button } from "@/app/(client)/components/ui/button";
 import { Card } from "@/app/(client)/components/ui/card";
 import { apiGet } from "@/lib/apiClient";
+import RestaurantLoader from "@/app/(client)/components/RestaurantLoader";
 
 export default function AboutPage({ params }) {
   const { slug } = params;
@@ -16,6 +16,7 @@ export default function AboutPage({ params }) {
   const [restaurant, setRestaurant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activeHeroIndex, setActiveHeroIndex] = useState(0);
 
   useEffect(() => {
     async function fetchRestaurant() {
@@ -23,11 +24,9 @@ export default function AboutPage({ params }) {
         setLoading(true);
         setError("");
 
-        // public menu endpoint – returns { success, data: { restaurant, categories, dishes } }
         const res = await apiGet(`/api/menu/${slug}`);
         const r = res?.data?.restaurant || null;
         setRestaurant(r);
-        console.log("AboutPage restaurant =", r);
       } catch (err) {
         console.error("Failed to load restaurant", err);
         setError("Failed to load restaurant");
@@ -37,60 +36,60 @@ export default function AboutPage({ params }) {
       }
     }
 
-    if (slug) {
-      fetchRestaurant();
-    }
+    if (slug) fetchRestaurant();
   }, [slug]);
 
-  // helper: convert many common time formats to "h:mm AM/PM"
+  // ✅ SAFE heroImages definition (FIX #1)
+  const heroImages = restaurant?.heroImages || [];
+
+  // ✅ Auto-slide
+  useEffect(() => {
+    if (!heroImages.length) return;
+
+    const interval = setInterval(() => {
+      setActiveHeroIndex((prev) =>
+        prev === heroImages.length - 1 ? 0 : prev + 1
+      );
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [heroImages]);
+
+  // ✅ Index safety (FIX #2)
+  useEffect(() => {
+    if (activeHeroIndex >= heroImages.length) {
+      setActiveHeroIndex(0);
+    }
+  }, [heroImages, activeHeroIndex]);
+
   function to12Hour(timeStr) {
     if (!timeStr && timeStr !== "") return timeStr;
 
     const s = String(timeStr).trim();
-
-    // If already contains AM/PM (accept a.m./p.m. too), normalize punctuation and capitalization
     if (/[ap]\.?m\.?/i.test(s)) {
       return s
         .replace(/\./g, "")
         .replace(/\s+/g, " ")
-        .toUpperCase()
-        .replace(/\sAM/i, " AM")
-        .replace(/\sPM/i, " PM");
+        .toUpperCase();
     }
 
-    // match HH:MM or H:MM or HH:MM:SS
     const m = s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
-    if (!m) {
-      // fallback: return original string
-      return s;
-    }
+    if (!m) return s;
 
     let hh = parseInt(m[1], 10);
     const mm = m[2];
-
     const ampm = hh >= 12 ? "PM" : "AM";
-    hh = hh % 12 || 12; // convert 0 -> 12, 13 -> 1 etc.
+    hh = hh % 12 || 12;
 
     return `${hh}:${mm} ${ampm}`;
   }
 
-  // ─────────────────────────────
-  // Loading state
-  // ─────────────────────────────
   if (loading) {
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <p className="text-muted-foreground text-lg">
-        Loading restaurant info...
-      </p>
-    </div>
-  );
-}
+    return (
+       <RestaurantLoader text="Restaurant Info Loading..." />
+    );
+  }
 
-
-  // ─────────────────────────────
-  // Error / not found
-  // ─────────────────────────────
   if (error || !restaurant) {
     return (
       <div className="min-h-screen bg-background pb-16">
@@ -106,20 +105,16 @@ export default function AboutPage({ params }) {
     );
   }
 
-  // ─────────────────────────────
-  // Destructure based on current API shape
-  // (coming from Restaurant + RestaurantInfo merged in menuController)
-  // ─────────────────────────────
   const {
     name,
     address,
     phone,
     email,
-    lunch, // { open, close }
-    dinner, // { open, close }
-    heroImageUrl,
+    lunch,
+    dinner,
     logoUrl,
     googleMapUrl,
+    rules,
   } = restaurant;
 
   const lunchText =
@@ -140,15 +135,9 @@ export default function AboutPage({ params }) {
         )}`
       : null);
 
-  const heroSrc = heroImageUrl || logoUrl || null;
-
-  // ─────────────────────────────
-  // Normal UI
-  // ─────────────────────────────
   return (
     <div className="min-h-screen bg-background pb-16">
       <div className="container mx-auto px-4 py-6">
-        {/* Back */}
         <Button
           variant="ghost"
           onClick={() => router.push(`/${slug}`)}
@@ -158,20 +147,32 @@ export default function AboutPage({ params }) {
           Back to Menu
         </Button>
 
-        {/* Hero + header block */}
         <section className="mb-6">
-
           <div className="flex flex-col items-center text-center">
             <h1 className="text-3xl font-bold">{name || "Restaurant"}</h1>
           </div>
 
+         <div className="w-full aspect-[16/9] md:aspect-[21/9] rounded-xl overflow-hidden mt-4 relative bg-muted">
 
-          {/* Full-width hero image */}
-          <div className="w-full h-40 md:h-52 rounded-xl overflow-hidden mt-4 relative bg-muted">
-            {heroSrc ? (
+            {heroImages.length > 0 ? (
+              heroImages.map((img, index) => (
+                <Image
+                  key={index}
+                  src={img}
+                  alt={`${name || "Restaurant"} hero ${index + 1}`}
+                  fill
+                  sizes="100vw"
+                  className={`absolute inset-0 object-cover transition-opacity duration-700 ${
+                    index === activeHeroIndex
+                      ? "opacity-100 z-10"
+                      : "opacity-0 z-0"
+                  }`}
+                />
+              ))
+            ) : logoUrl ? (
               <Image
-                src={heroSrc}
-                alt={name || "Restaurant hero image"}
+                src={logoUrl}
+                alt={name || "Restaurant logo"}
                 fill
                 sizes="100vw"
                 className="object-cover"
@@ -183,11 +184,23 @@ export default function AboutPage({ params }) {
             )}
           </div>
 
-          
+          {heroImages.length > 1 && (
+            <div className="flex justify-center gap-2 mt-2">
+              {heroImages.map((_, i) => (
+                <button
+                  key={i}
+                  aria-label={`Show image ${i + 1}`}
+                  onClick={() => setActiveHeroIndex(i)}
+                  className={`w-2 h-2 rounded-full ${
+                    i === activeHeroIndex ? "bg-primary" : "bg-muted"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </section>
 
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Contact info */}
           <Card className="p-4 space-y-4">
             <h2 className="text-xl font-semibold mb-2">Contact</h2>
 
@@ -229,7 +242,6 @@ export default function AboutPage({ params }) {
             )}
           </Card>
 
-          {/* Timings */}
           <Card className="p-4 space-y-4">
             <h2 className="text-xl font-semibold mb-2">Timings</h2>
 
@@ -250,6 +262,21 @@ export default function AboutPage({ params }) {
             </div>
           </Card>
         </div>
+
+        {Array.isArray(rules) && rules.length > 0 && (
+          <div className="mt-6">
+            <Card className="p-4">
+              <h2 className="text-xl font-semibold mb-3">
+                Rules & Guidelines
+              </h2>
+              <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
+                {rules.map((rule, index) => (
+                  <li key={index}>{rule}</li>
+                ))}
+              </ol>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );

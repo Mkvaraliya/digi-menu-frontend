@@ -12,14 +12,14 @@ const CategorySection = ({
     categories.find((c) => c.id === selectedCategoryId) || null;
 
   return (
-    <section className="container mx-auto px-4 py-2">
+    <section className="container mx-auto px-4 py-1">
       <h2 className="text-2xl font-bold mb-2">Categories</h2>
 
       {/* CATEGORY ROW */}
-      <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
+      <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide">
         <button
           onClick={() => onSelectCategory("all", "all")}
-          className={`min-w-[120px] h-12 px-5 rounded-full text-sm font-medium transition-all whitespace-nowrap shrink-0
+          className={`min-w-[120px] h-8 px-4 rounded-full text-sm font-medium leading-none transition-all whitespace-nowrap shrink-0
             ${
               selectedCategoryName === "all"
                 ? "bg-primary text-primary-foreground shadow-md"
@@ -33,7 +33,7 @@ const CategorySection = ({
           <button
             key={category.id}
             onClick={() => onSelectCategory(category.id, category.name)}
-            className={`min-w-[120px] h-12 px-5 rounded-full text-sm font-medium transition-all whitespace-nowrap shrink-0
+            className={`min-w-[120px] h-8 px-4 rounded-full text-sm font-medium leading-none transition-all whitespace-nowrap shrink-0
               ${
                 selectedCategoryName === category.name
                   ? "bg-primary text-primary-foreground shadow-md"
@@ -47,16 +47,15 @@ const CategorySection = ({
 
       {/* SUBCATEGORY ROW */}
       {activeCategory && activeCategory.subcategories.length > 0 && (
-        <div className="mt-5">
+        <div className="mt-4">
           <h3 className="text-lg font-semibold mb-2">
             Subcategories · {activeCategory.name}
           </h3>
 
-          <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
-            {/* ALL SUBCATEGORY */}
+          <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide">
             <Card
               onClick={() => onSelectSubcategory("")}
-              className={`min-w-[120px] h-10 px-4 flex items-center justify-center whitespace-nowrap shrink-0
+              className={`min-w-[120px] h-8 px-4 py-0 flex items-center justify-center whitespace-nowrap shrink-0
                 cursor-pointer rounded-md border transition-all
                 ${
                   !selectedSubcategoryId
@@ -64,17 +63,16 @@ const CategorySection = ({
                     : "bg-card hover:bg-muted"
                 }`}
             >
-              <span className="text-sm font-medium">
+              <span className="text-sm font-medium leading-none">
                 All {activeCategory.name}
               </span>
             </Card>
 
-            {/* DYNAMIC SUBCATEGORIES */}
             {activeCategory.subcategories.map((sub) => (
               <Card
                 key={sub.id}
                 onClick={() => onSelectSubcategory(sub.id)}
-                className={`min-w-[120px] h-10 px-4 flex items-center justify-center whitespace-nowrap shrink-0
+                className={`min-w-[120px] h-8 px-4 py-0 flex items-center justify-center whitespace-nowrap shrink-0
                   cursor-pointer rounded-md border transition-all
                   ${
                     selectedSubcategoryId === sub.id
@@ -82,7 +80,7 @@ const CategorySection = ({
                       : "bg-card hover:bg-muted"
                   }`}
               >
-                <span className="text-sm font-medium">
+                <span className="text-sm font-medium leading-none">
                   {sub.name}
                 </span>
               </Card>
@@ -95,3 +93,4 @@ const CategorySection = ({
 };
 
 export default CategorySection;
+

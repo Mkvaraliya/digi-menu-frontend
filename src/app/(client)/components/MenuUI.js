@@ -7,6 +7,7 @@ import SearchBar from "@/app/(client)/components/SearchBar";
 import CategorySection from "@/app/(client)/components/CategorySection";
 import DishGrid from "@/app/(client)/components/DishGrid";
 import { apiGet } from "@/lib/apiClient";
+import RestaurantLoader from "./RestaurantLoader";
 
 export default function MenuUI({ restaurant, categories, dishes, slug }) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,9 +74,7 @@ export default function MenuUI({ restaurant, categories, dishes, slug }) {
       />
 
       {loading ? (
-        <div className="container mx-auto px-4 py-10 text-center text-muted-foreground">
-          Loading dishes...
-        </div>
+        <RestaurantLoader text="Preparing menu..." />
       ) : (
         <DishGrid dishes={filteredDishes} slug={slug} />
       )}
