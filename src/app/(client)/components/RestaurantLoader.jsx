@@ -5,7 +5,7 @@ import loaderAnimation from "@/assets/lottie/chef-loader.json";
 
 export default function RestaurantLoader({ text = "Loading menu..." }) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+<div className="flex flex-col items-center justify-center py-20">
       <div className="w-40 h-40">
         <Lottie
           animationData={loaderAnimation}
